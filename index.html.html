@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>110年國中教育會考數學科非選題第2題─切蛋糕模擬器</title>
+    <style>
+        .container {
+            width: 100%;
+            margin-bottom: 30px;
+        }
+        .cake {
+            display: grid;
+            margin: 20px 0;
+            position: relative;
+            width: 400px;
+            height: 400px;
+        }
+        .cake div {
+            border: 1px solid #000;
+            background-color: #fff;
+        }
+        .crispy {
+            background-color: gray;
+        }
+        .non-crispy {
+            background-color: white;
+        }
+        .cut-line {
+            position: absolute;
+            background-color: red;
+        }
+        .green-text {
+            color: green;
+            font-size: larger;
+        }
+        .red-text {
+            color: red;
+            font-size: larger;
+        }
+        .highlighted {
+            font-size: larger;
+        }
+        .calculation-line {
+            margin: 5px 0;
+        }
+        .method-title {
+            font-weight: bold;
+            margin-top: 15px;
+        }
+        table {
+            border-collapse: collapse;
+            width: 100%;
+        }
+        td {
+            vertical-align: top;
+            padding: 10px;
+        }
+        .left-cell {
+            width: 450px;
+        }
+        .controls {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .controls label {
+            margin-right: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>110年國中教育會考數學科非選題第2題─切蛋糕模擬器</h1>
+
+    <div class="container">
+        <h2>第一個蛋糕：最大切割數量為4</h2>
+        <table>
+            <tr>
+                <td class="left-cell">
+                    <div class="controls">
+                        <label for="horizontalCuts1">橫切次數：</label>
+                        <input type="range" id="horizontalCuts1" min="0" max="4" value="0" onchange="updateCake1()">
+                        <span id="hCuts1" class="green-text">0</span>
+                        <label for="verticalCuts1">縱切次數：</label>
+                        <input type="range" id="verticalCuts1" min="0" max="4" value="0" onchange="updateCake1()">
+                        <span id="vCuts1" class="red-text">0</span>
+                    </div>
+                    <div id="cake1" class="cake"></div>
+                    <p>總小塊數：<span id="totalPieces1">0</span></p>
+                </td>
+                <td>
+                    <button onclick="showCalculation1()">顯示計算過程</button>
+                    <div id="calculation1"></div>
+                </td>
+            </tr>
+        </table>
+    </div>
+
+    <div class="container">
+        <h2>第二個蛋糕：最大切割數量為20</h2>
+        <table>
+            <tr>
+                <td class="left-cell">
+                    <div class="controls">
+                        <label for="horizontalCuts2">橫切次數：</label>
+                        <input type="range" id="horizontalCuts2" min="0" max="20" value="0" onchange="updateCake2()">
+                        <span id="hCuts2" class="green-text">0</span>
+                        <label for="verticalCuts2">縱切次數：</label>
+                        <input type="range" id="verticalCuts2" min="0" max="20" value="0" onchange="updateCake2()">
+                        <span id="vCuts2" class="red-text">0</span>
+                    </div>
+                    <div id="cake2" class="cake"></div>
+                    <p>未焦脆小塊數：<span id="nonCrispy2">0</span></p>
+                    <p>焦脆小塊數：<span id="crispy2">0</span></p>
+                </td>
+                <td>
+                    <button onclick="showCalculation2()">顯示計算過程</button>
+                    <div id="calculation2"></div>
+                </td>
+            </tr>
+        </table>
+    </div>
+
+    <script>
+        function updateCake1() {
+            adjustSliders('horizontalCuts1', 'verticalCuts1', 4);
+            const hCuts = parseInt(document.getElementById('horizontalCuts1').value);
+            const vCuts = parseInt(document.getElementById('verticalCuts1').value);
+
+            document.getElementById('hCuts1').innerText = hCuts;
+            document.getElementById('vCuts1').innerText = vCuts;
+
+            const totalPieces = (hCuts + 1) * (vCuts + 1);
+            document.getElementById('totalPieces1').innerText = totalPieces;
+
+            drawCake('cake1', hCuts, vCuts, false);
+        }
+
+        function updateCake2() {
+            adjustSliders('horizontalCuts2', 'verticalCuts2', 20);
+            const hCuts = parseInt(document.getElementById('horizontalCuts2').value);
+            const vCuts = parseInt(document.getElementById('verticalCuts2').value);
+
+            document.getElementById('hCuts2').innerText = hCuts;
+            document.getElementById('vCuts2').innerText = vCuts;
+
+            const totalPieces = (hCuts + 1) * (vCuts + 1);
+            const crispyPieces = (hCuts + 1) * 2 + (vCuts + 1) * 2 - 4;
+            const nonCrispyPieces = totalPieces - crispyPieces;
+
+            document.getElementById('nonCrispy2').innerText = nonCrispyPieces;
+            document.getElementById('crispy2').innerText = crispyPieces;
+
+            drawCake('cake2', hCuts, vCuts, true);
+        }
+
+        function drawCake(cakeId, hCuts, vCuts, highlightCrispy) {
+            const cake = document.getElementById(cakeId);
+            cake.innerHTML = '';
+
+            const rows = hCuts + 1;
+            const cols = vCuts + 1;
+            cake.style.gridTemplateRows = `repeat(${rows}, 1fr)`;
+            cake.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
+
+            for (let r = 0; r < rows; r++) {
+                for (let c = 0; c < cols; c++) {
+                    const div = document.createElement('div');
+                    if (highlightCrispy && (r === 0 || r === rows - 1 || c === 0 || c === cols - 1)) {
+                        div.classList.add('crispy');
+                        div.style.backgroundColor = 'gray';
+                    } else if (highlightCrispy) {
+                        div.classList.add('non-crispy');
+                    }
+                    cake.appendChild(div);
+                }
+            }
+
+            drawLines(cakeId, hCuts, vCuts);
+        }
+
+        function drawLines(cakeId, hCuts, vCuts) {
+            const cake = document.getElementById(cakeId);
+            const width = cake.offsetWidth;
+            const height = cake.offsetHeight;
+
+            for (let i = 1; i <= hCuts; i++) {
+                const line = document.createElement('div');
+                line.classList.add('cut-line');
+                line.style.width = `${width}px`;
+                line.style.height = '2px';
+                line.style.top = `${(height / (hCuts + 1)) * i}px`;
+                line.style.left = '0';
+                line.style.position = 'absolute';
+                cake.appendChild(line);
+            }
+
+            for (let i = 1; i <= vCuts; i++) {
+                const line = document.createElement('div');
+                line.classList.add('cut-line');
+                line.style.height = `${height}px`;
+                line.style.width = '2px';
+                line.style.left = `${(width / (vCuts + 1)) * i}px`;
+                line.style.top = '0';
+                line.style.position = 'absolute';
+                cake.appendChild(line);
+            }
+        }
+
+        function adjustSliders(horizontalId, verticalId, maxCuts) {
+            const hCuts = parseInt(document.getElementById(horizontalId).value);
+            const vCuts = parseInt(document.getElementById(verticalId).value);
+            const hSlider = document.getElementById(horizontalId);
+            const vSlider = document.getElementById(verticalId);
+
+            hSlider.max = maxCuts - vCuts;
+            vSlider.max = maxCuts - hCuts;
+
+            if (parseInt(hSlider.value) > hSlider.max) {
+                hSlider.value = hSlider.max;
+            }
+            if (parseInt(vSlider.value) > vSlider.max) {
+                vSlider.value = vSlider.max;
+            }
+        }
+
+        function showCalculation1() {
+            const hCuts = parseInt(document.getElementById('horizontalCuts1').value);
+            const vCuts = parseInt(document.getElementById('verticalCuts1').value);
+            const totalPieces = (hCuts + 1) * (vCuts + 1);
+            
+            const calculation = `
+                <div class="calculation-line">橫切次數：<span class='green-text highlighted'>${hCuts}</span></div>
+                <div class="calculation-line">縱切次數：<span class='red-text highlighted'>${vCuts}</span></div>
+                <div class="calculation-line">總小塊數：(<span class='green-text highlighted'>${hCuts}</span> + 1) × (<span class='red-text highlighted'>${vCuts}</span> + 1) = ${totalPieces}</div>
+            `;
+            document.getElementById('calculation1').innerHTML = calculation;
+        }
+
+        function showCalculation2() {
+            const hCuts = parseInt(document.getElementById('horizontalCuts2').value);
+            const vCuts = parseInt(document.getElementById('verticalCuts2').value);
+            const crispyPieces = (hCuts + 1) * 2 + (vCuts + 1) * 2 - 4;
+            const totalPieces = (hCuts + 1) * (vCuts + 1);
+            const nonCrispyPieces = totalPieces - crispyPieces;
+            
+            const calculation = `
+                <div class="calculation-line">橫切次數：<span class='green-text highlighted'>${hCuts}</span></div>
+                <div class="calculation-line">縱切次數：<span class='red-text highlighted'>${vCuts}</span></div>
+                <br>
+                <div class="method-title">方法1：</div>
+                <div class="calculation-line">焦脆小塊：(<span class='green-text highlighted'>${hCuts}</span> + 1) × 2 + (<span class='red-text highlighted'>${vCuts}</span> + 1) × 2 - 4 = ${crispyPieces}</div>
+                <div class="calculation-line">未焦脆小塊：(<span class='green-text highlighted'>${hCuts}</span> + 1) × (<span class='red-text highlighted'>${vCuts}</span> + 1) - ${crispyPieces} = ${nonCrispyPieces}</div>
+                <br>
+                <div class="method-title">方法2：</div>
+                <div class="calculation-line">未焦脆小塊：(<span class='green-text highlighted'>${hCuts}</span> - 1) × (<span class='red-text highlighted'>${vCuts}</span> - 1) = ${(hCuts - 1) * (vCuts - 1)}</div>
+            `;
+            document.getElementById('calculation2').innerHTML = calculation;
+        }
+    </script>
+</body>
+</html>
